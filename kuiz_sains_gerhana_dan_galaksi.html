@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuiz Sains - 6 STANFORD: Gerhana & Galaksi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #0b0f19;
+            color: white;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
+            min-height: 100vh;
+        }
+
+        .studio-container {
+            box-shadow: 0 0 50px rgba(59, 130, 246, 0.5), inset 0 0 20px rgba(139, 92, 246, 0.4);
+            border: 2px solid #3b82f6;
+            background: linear-gradient(145deg, #0f172a, #1e293b);
+        }
+
+        /* Animasi */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.6); }
+            50% { box-shadow: 0 0 30px rgba(99, 102, 241, 1); }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        .animate-pop { animation: pop 0.5s ease-out forwards; }
+        .animate-shake { animation: shake 0.4s ease-in-out; }
+        .animate-slide { animation: slideIn 0.5s ease-out forwards; }
+        
+        /* Butang TV */
+        .btn-tv {
+            background: linear-gradient(to bottom, #2563eb, #1d4ed8);
+            border: 2px solid #60a5fa;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-tv:hover:not(:disabled) {
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(96, 165, 250, 0.8);
+            background: linear-gradient(to bottom, #3b82f6, #2563eb);
+        }
+        
+        .btn-tv:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(80%);
+        }
+
+        .btn-correct { background: linear-gradient(to bottom, #16a34a, #15803d) !important; border-color: #4ade80 !important; box-shadow: 0 0 30px rgba(74, 222, 128, 0.8) !important; }
+        .btn-wrong { background: linear-gradient(to bottom, #dc2626, #b91c1c) !important; border-color: #f87171 !important; box-shadow: 0 0 30px rgba(248, 113, 113, 0.8) !important; }
+
+        /* Pemasa */
+        .timer-bar-container { background-color: #334155; border-radius: 99px; overflow: hidden; height: 20px; width: 100%; border: 2px solid #475569; }
+        .timer-bar { height: 100%; background: linear-gradient(90deg, #10b981, #3b82f6); transition: width 1s linear, background-color 0.5s; width: 100%; }
+        .timer-warning { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+        .timer-danger { background: linear-gradient(90deg, #ef4444, #991b1b); }
+
+        /* Lifeline icons */
+        .lifeline-btn {
+            background: #1e293b; border: 2px solid #fbbf24; border-radius: 50%; width: 60px; height: 60px;
+            display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.2rem;
+            color: #fbbf24; box-shadow: 0 0 15px rgba(251, 191, 36, 0.3); transition: all 0.3s;
+        }
+        .lifeline-btn:hover:not(.used) { background: #fbbf24; color: #1e293b; box-shadow: 0 0 25px rgba(251, 191, 36, 0.8); transform: scale(1.1); cursor: pointer; }
+        .lifeline-btn.used { border-color: #475569; color: #475569; box-shadow: none; cursor: not-allowed; text-decoration: line-through; }
+
+        /* Skrin disembunyikan secara lalai */
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* Kanvas Sijil */
+        #certCanvas { display: none; margin: 0 auto; max-width: 100%; height: auto; border: 4px solid #fbbf24; border-radius: 8px; }
+        
+        .floating-particles { position: fixed; top:0; left:0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 relative">
+
+    <!-- Zarah Konfeti (Canvas) -->
+    <canvas id="confetti" class="floating-particles"></canvas>
+
+    <div class="studio-container w-full max-w-4xl rounded-3xl p-6 sm:p-10 text-center relative z-10 animate-slide">
+        
+        <!-- Skrin 1: Log Masuk & Pengenalan -->
+        <div id="screen-login" class="screen active">
+            <h3 class="text-blue-400 font-bold tracking-widest uppercase mb-2">Permainan Kuiz Sains Interaktif</h3>
+            <h1 class="text-4xl sm:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-yellow-400 mb-6 drop-shadow-lg">
+                GERHANA & GALAKSI
+            </h1>
+            <div class="bg-gray-800 bg-opacity-50 rounded-xl p-6 mb-8 border border-gray-700 max-w-lg mx-auto">
+                <p class="text-gray-300 mb-4">Kelas: <span class="font-bold text-yellow-400">6 STANFORD</span></p>
+                <input type="text" id="playerNameInput" placeholder="Masukkan Nama Penuh Anda..." 
+                       class="w-full bg-gray-900 border-2 border-blue-500 rounded-lg py-3 px-4 text-white text-lg focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400 transition-all text-center uppercase" autocomplete="off">
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-400 mb-8 max-w-2xl mx-auto">
+                <div class="bg-gray-800 p-3 rounded-lg border border-gray-700"><strong class="text-blue-400">Pusingan 1:</strong><br>Soalan Cepat Tepat (10x Aras Rendah)</div>
+                <div class="bg-gray-800 p-3 rounded-lg border border-gray-700"><strong class="text-purple-400">Pusingan 2:</strong><br>Risiko Mata Berganda (10x Aras Sederhana)</div>
+                <div class="bg-gray-800 p-3 rounded-lg border border-gray-700"><strong class="text-yellow-400">Pusingan 3:</strong><br>Cabaran Jutawan (10x Aras Tinggi)</div>
+            </div>
+
+            <button onclick="startGame()" class="btn-tv text-white font-bold py-4 px-12 rounded-full text-xl sm:text-2xl shadow-xl hover:shadow-2xl">
+                MULA CABARAN
+            </button>
+            <p class="mt-8 text-xs text-gray-500">Disediakan oleh: Cikgu Norkhairil bin Mohamad</p>
+        </div>
+
+        <!-- Skrin 2: Pengenalan Pusingan -->
+        <div id="screen-round-intro" class="screen flex flex-col justify-center items-center min-h-[50vh]">
+            <h2 id="roundTitleDisplay" class="text-5xl sm:text-7xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 animate-pop">
+                PUSINGAN 1
+            </h2>
+            <p id="roundDescDisplay" class="text-2xl text-blue-300 mb-8">Soalan Cepat Tepat</p>
+            <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-24 w-24 border-t-blue-500 animate-spin mx-auto"></div>
+        </div>
+
+        <!-- Skrin 3: Permainan Utama (Pentas) -->
+        <div id="screen-game" class="screen">
+            <!-- Papan Pemuka Header -->
+            <div class="flex flex-wrap justify-between items-center mb-6 bg-gray-900 bg-opacity-70 p-4 rounded-xl border border-gray-700">
+                <div class="text-left">
+                    <p class="text-xs text-gray-400">Peserta</p>
+                    <p id="hudPlayerName" class="font-bold text-lg text-blue-400 uppercase">NAMA</p>
+                </div>
+                <div class="text-center mx-4">
+                    <p id="hudRoundTitle" class="text-sm font-bold text-yellow-400 tracking-widest">PUSINGAN 1</p>
+                    <p class="text-xs text-gray-400">Soalan <span id="hudQuestionNum" class="text-white font-bold">1</span> / 10</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs text-gray-400">Mata Terkumpul</p>
+                    <p id="hudScore" class="font-black text-2xl text-green-400 transition-all duration-300">0</p>
+                </div>
+            </div>
+
+            <!-- Talian Hayat -->
+            <div class="flex justify-center gap-6 mb-6">
+                <div class="flex flex-col items-center group relative">
+                    <button id="btn-5050" onclick="use5050()" class="lifeline-btn" title="Gugurkan 2 jawapan salah">50:50</button>
+                    <span class="text-[10px] text-gray-400 mt-1">50:50</span>
+                </div>
+                <div class="flex flex-col items-center group relative">
+                    <button id="btn-hint" onclick="useHint()" class="lifeline-btn text-2xl" title="Dapatkan petunjuk hos">💡</button>
+                    <span class="text-[10px] text-gray-400 mt-1">PETUNJUK</span>
+                </div>
+            </div>
+
+            <!-- Kawasan Soalan -->
+            <div class="bg-gray-800 bg-opacity-80 border-2 border-blue-500 rounded-2xl p-6 sm:p-10 mb-8 relative shadow-2xl">
+                <!-- Pemasa -->
+                <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gray-900 border-2 border-blue-500 rounded-full px-6 py-2 shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                    <span id="timerText" class="font-bold text-xl text-white">20s</span>
+                </div>
+                
+                <h3 id="questionText" class="text-xl sm:text-3xl font-bold mt-4 mb-6 leading-relaxed">
+                    [Soalan akan dimuatkan di sini]
+                </h3>
+
+                <!-- Bar Pemasa Visual -->
+                <div class="timer-bar-container mb-6">
+                    <div id="timerBar" class="timer-bar"></div>
+                </div>
+
+                <!-- Butang Jawapan -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="optionsContainer">
+                    <button class="btn-tv text-lg py-4 px-6 rounded-xl font-bold text-left flex items-center" onclick="checkAnswer(0)"><span class="text-yellow-400 mr-3">A.</span> <span id="opt0Text">Pilihan 1</span></button>
+                    <button class="btn-tv text-lg py-4 px-6 rounded-xl font-bold text-left flex items-center" onclick="checkAnswer(1)"><span class="text-yellow-400 mr-3">B.</span> <span id="opt1Text">Pilihan 2</span></button>
+                    <button class="btn-tv text-lg py-4 px-6 rounded-xl font-bold text-left flex items-center" onclick="checkAnswer(2)"><span class="text-yellow-400 mr-3">C.</span> <span id="opt2Text">Pilihan 3</span></button>
+                    <button class="btn-tv text-lg py-4 px-6 rounded-xl font-bold text-left flex items-center" onclick="checkAnswer(3)"><span class="text-yellow-400 mr-3">D.</span> <span id="opt3Text">Pilihan 4</span></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skrin 4: Keputusan Akhir & Sijil -->
+        <div id="screen-result" class="screen animate-slide">
+            <h1 class="text-4xl sm:text-5xl font-black text-yellow-400 mb-2">TAHNIAH!</h1>
+            <p class="text-xl text-gray-300 mb-6">Anda telah tamat rancangan ini, <span id="resultName" class="font-bold text-white">Nama</span>!</p>
+            
+            <div class="bg-gray-900 border border-gray-700 rounded-2xl p-6 max-w-md mx-auto mb-8 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-blue-500"></div>
+                <p class="text-gray-400 uppercase text-sm font-bold mb-2">Jumlah Mata Kemenangan</p>
+                <p id="resultScore" class="text-6xl font-black text-green-400 mb-4 animate-pop">0</p>
+                <p class="text-sm text-gray-500">Pencapaian Hebat untuk kelas 6 STANFORD!</p>
+            </div>
+
+            <!-- Paparan Sijil -->
+            <div class="mb-8 hidden sm:block">
+                <p class="text-sm text-gray-400 mb-2">Pratonton Sijil Anda:</p>
+                <canvas id="certCanvas" width="800" height="565" class="shadow-2xl"></canvas>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <button onclick="downloadCertificate()" class="btn-tv flex-1 text-white font-bold py-4 px-6 rounded-full text-lg max-w-xs mx-auto flex items-center justify-center">
+                    <span class="mr-2">📥</span> Muat Turun Sijil
+                </button>
+                <button onclick="location.reload()" class="bg-gray-700 hover:bg-gray-600 border-2 border-gray-500 flex-1 text-white font-bold py-4 px-6 rounded-full text-lg max-w-xs mx-auto transition-all">
+                    Main Semula
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal Maklum Balas (Feedback) -->
+    <div id="feedbackModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 hidden transition-opacity duration-300 opacity-0">
+        <div id="feedbackBox" class="bg-gray-900 border-4 border-gray-700 rounded-3xl p-10 max-w-md w-full text-center transform scale-90 transition-transform duration-300">
+            <div id="feedbackIcon" class="text-7xl mb-4">✔️</div>
+            <h2 id="feedbackTitle" class="text-4xl font-black mb-2">TEPAT!</h2>
+            <p id="feedbackText" class="text-lg text-gray-300 mb-6">Mata ditambahkan ke akaun anda.</p>
+            <button onclick="nextAction()" id="nextBtn" class="btn-tv w-full text-white font-bold py-3 rounded-xl text-xl">
+                Seterusnya ➔
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Petunjuk (Hint) -->
+    <div id="hintModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 hidden">
+        <div class="bg-blue-900 border-4 border-blue-500 rounded-2xl p-8 max-w-sm w-full text-center animate-pop shadow-[0_0_30px_rgba(59,130,246,0.6)]">
+            <div class="text-5xl mb-4">💡</div>
+            <h3 class="text-2xl font-bold text-yellow-300 mb-4">Petunjuk Hos</h3>
+            <p id="hintTextDisplay" class="text-lg text-white mb-6">Teks petunjuk.</p>
+            <button onclick="closeHint()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-8 rounded-full border-2 border-blue-400">
+                Tutup
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Set soalan: 10 soalan setiap pusingan, keseluruhan 30 soalan.
+        const allQuestions = {
+            round1: [ // Aras Rendah (Fakta Asas) - 10 Mata
+                { q: "Apakah bentuk galaksi tempat terletaknya Sistem Suria kita?", opts: ["Berpilin", "Elips", "Tidak Seragam", "Bulat"], a: 0, hint: "Bentuknya seperti lingkaran ubat nyamuk atau puting beliung." },
+                { q: "Sistem suria kita terletak di dalam galaksi yang dikenali sebagai...", opts: ["Andromeda", "Bima Sakti", "Magellanic Cloud", "Ursa Major"], a: 1, hint: "Namanya bermula dengan huruf B dan berkaitan dengan ruang angkasa kita." },
+                { q: "Gerhana Bulan berlaku apabila kedudukan Bumi berada di antara Matahari dan...", opts: ["Zuhrah", "Marikh", "Bulan", "Musytari"], a: 2, hint: "Satelit semula jadi Bumi yang menerangi waktu malam." },
+                { q: "Berapakah bilangan jenis gerhana utama yang berlaku melibatkan Bumi?", opts: ["1", "2", "3", "4"], a: 1, hint: "Terdapat gerhana yang melibatkan Matahari dan satu lagi melibatkan Bulan." },
+                { q: "Galaksi terbina daripada jutaan bintang, habuk, dan...", opts: ["Air", "Gas", "Besi", "Plastik"], a: 1, hint: "Wujud dalam bentuk wap atau udara di angkasa lepas." },
+                { q: "Gerhana Matahari lazimnya dapat dilihat pada waktu...", opts: ["Pagi hingga Petang", "Tengah malam", "Subuh sahaja", "Senja sahaja"], a: 0, hint: "Hanya berlaku apabila Matahari sedang bersinar di langit." },
+                { q: "Gerhana Bulan hanya boleh berlaku pada fasa bulan...", opts: ["Anak Bulan", "Bulan Separa", "Bulan Purnama", "Bulan Sabit"], a: 2, hint: "Fasa ketika bulan kelihatan bulat sepenuhnya." },
+                { q: "Kawasan bayang-bayang gelap sepenuhnya semasa kejadian gerhana dipanggil...", opts: ["Penumbra", "Umbra", "Korona", "Orbit"], a: 1, hint: "Perkataan 5 huruf, bermula dengan huruf U." },
+                { q: "Kawasan bayang-bayang separa gelap yang mengelilingi umbra dipanggil...", opts: ["Orbit", "Umbra", "Penumbra", "Paksi"], a: 2, hint: "Mempunyai perkataan 'umbra' di hujungnya." },
+                { q: "Apakah sumber cahaya utama dalam sistem suria yang menyebabkan kejadian gerhana?", opts: ["Bulan", "Matahari", "Bintang kutub", "Bumi"], a: 1, hint: "Pusat sistem suria kita yang sangat panas." }
+            ],
+            round2: [ // Aras Sederhana (Pemahaman Proses) - 20 Mata
+                { q: "Susunan manakah yang betul semasa kejadian Gerhana Matahari?", opts: ["Bumi - Matahari - Bulan", "Bumi - Bulan - Matahari", "Matahari - Bumi - Bulan", "Matahari - Bulan - Bumi"], a: 3, hint: "Bulan menghalang cahaya Matahari daripada sampai ke Bumi." },
+                { q: "Mengapakah gerhana tidak berlaku pada setiap bulan?", opts: ["Kerana orbit Bulan condong sedikit", "Kerana Bumi berputar terlalu laju", "Kerana Matahari sentiasa bergerak", "Kerana awan sering menutupi langit"], a: 0, hint: "Laluan bulan tidak rata berbanding laluan bumi mengelilingi matahari." },
+                { q: "Apakah ciri utama bagi galaksi Elips?", opts: ["Berbentuk bujur dan mengandungi bintang tua", "Berbentuk lingkaran dan banyak bintang muda", "Tiada bentuk tetap dan berterabur", "Bentuknya segi empat tepat"], a: 0, hint: "Bentuknya seperti sebiji telur (bujur)." },
+                { q: "Berapa lamakah fenomena gerhana bulan penuh biasanya boleh berlaku?", opts: ["Beberapa saat sahaja", "Beberapa minit sahaja", "Sehingga beberapa jam", "Sepanjang hari"], a: 2, hint: "Lebih lama berbanding gerhana Matahari, sempat untuk kita memerhatikannya pada waktu malam." },
+                { q: "Semasa gerhana Matahari penuh, lapisan luar gas bercahaya yang dapat dilihat seperti mahkota dikenali sebagai...", opts: ["Kromosfera", "Korona", "Fotosfera", "Teras"], a: 1, hint: "Sama nama dengan sejenis virus terkenal." },
+                { q: "Mengapakah kita tidak dibenarkan melihat gerhana Matahari dengan mata kasar?", opts: ["Boleh merosakkan retina mata hingga buta", "Cahaya terlampau suram", "Boleh menyebabkan pening kepala", "Matahari akan meletup"], a: 0, hint: "Sinaran ultraungu (UV) yang tersembunyi boleh membakar bahagian belakang mata." },
+                { q: "Awan Magellan (Magellanic Clouds) merupakan contoh bagi jenis galaksi...", opts: ["Elips", "Berpilin", "Tidak Seragam", "Bulatan"], a: 2, hint: "Bentuknya berterabur dan tiada struktur simetri." },
+                { q: "Semasa kejadian gerhana, bayang-bayang terbentuk kerana cahaya mempunyai sifat...", opts: ["Boleh dibiaskan", "Bergerak lurus", "Boleh dipantulkan", "Boleh menembusi objek legap"], a: 1, hint: "Cahaya tidak boleh membengkok untuk melepasi objek." },
+                { q: "Gerhana Bulan separa berlaku apabila Bulan berada di kawasan...", opts: ["Umbra sepenuhnya", "Penumbra dan sebahagian umbra", "Luar kawasan bayang-bayang", "Korona Matahari"], a: 1, hint: "Bulan merentasi sempadan kawasan gelap penuh dan separa gelap." },
+                { q: "Alam semesta adalah sangat luas dan terdiri daripada berjuta-juta...", opts: ["Galaksi", "Sistem Suria", "Asteroid", "Planet Bumi"], a: 0, hint: "Struktur gergasi yang mengandungi berbilion bintang, seperti Bima Sakti." }
+            ],
+            round3: [ // Aras Tinggi (KBAT & Analisis) - 50 Mata
+                { q: "Jika orbit Bulan selari sepenuhnya dengan satah orbit Bumi, apakah yang akan terjadi?", opts: ["Tiada lagi gerhana berlaku", "Gerhana berlaku setiap bulan", "Bumi akan berlanggar dengan Bulan", "Matahari akan padam"], a: 1, hint: "Kedudukan sejajar akan berlaku dengan sangat kerap." },
+                { q: "Ramalkan apa yang mungkin berlaku kepada suhu persekitaran di permukaan Bumi semasa Gerhana Matahari Penuh.", opts: ["Suhu meningkat mendadak", "Suhu menurun seketika", "Tiada perubahan suhu", "Suhu menjadi beku"], a: 1, hint: "Kehilangan sumber haba utama secara tiba-tiba." },
+                { q: "Mengapakah Bulan kelihatan kemerahan (blood moon) semasa kejadian Gerhana Bulan Penuh?", opts: ["Suhu bulan menjadi panas", "Debu di bulan memantulkan warna merah", "Pembiasan cahaya Matahari oleh atmosfera Bumi", "Bulan mengeluarkan cahayanya sendiri"], a: 2, hint: "Udara di keliling planet kita menapis warna biru dan membenarkan warna merah melepasinya." },
+                { q: "Antara berikut, yang manakah alat paling selamat untuk memerhatikan gerhana Matahari secara langsung?", opts: ["Cermin mata hitam biasa", "Filem X-ray lama", "Kamera telefon pintar", "Cermin mata penuras suria (Mylar)"], a: 3, hint: "Memerlukan penapis khas yang direka khusus untuk menyekat 99.9% cahaya kuat." },
+                { q: "Jika sebuah bintang gergasi mati dan meletup (supernova) di dalam galaksi, sisa terasnya yang sangat tumpat mungkin membentuk...", opts: ["Planet baharu", "Lohong hitam (Black hole)", "Komet", "Matahari kecil"], a: 1, hint: "Kawasan graviti melampau di mana cahaya pun tidak boleh terlepas." },
+                { q: "Berdasarkan prinsip alam semesta, apakah daya dominan yang mengikat bintang-bintang untuk kekal berada di dalam sebuah galaksi?", opts: ["Daya magnet", "Daya geseran", "Daya tarikan graviti", "Daya emparan"], a: 2, hint: "Daya yang sama mengekalkan kita berpijak di permukaan bumi." },
+                { q: "Fenomena 'Peralihan Merah' (Red Shift) pada cahaya dari galaksi jauh membuktikan teori bahawa...", opts: ["Galaksi sedang terbakar", "Alam semesta sedang mengembang", "Galaksi menghampiri Bumi", "Galaksi akan musnah"], a: 1, hint: "Objek bergerak menjauhi kita dengan kelajuan tinggi, menandakan ruang semakin membesar." },
+                { q: "Sekiranya kamu berada betul-betul di dalam kawasan penumbra semasa kejadian gerhana Matahari, apakah yang akan kamu perhatikan?", opts: ["Gerhana Matahari Separa", "Gerhana Matahari Penuh", "Tiada gerhana kelihatan", "Gerhana Cincin sahaja"], a: 0, hint: "Kamu hanya dihalang sebahagian kecil cahaya, jadi bentuk matahari tidak tertutup sepenuhnya." },
+                { q: "Mengapakah tempoh masa gerhana Matahari penuh jauh lebih singkat (beberapa minit) berbanding gerhana Bulan penuh?", opts: ["Bumi bergerak sangat laju", "Bayang umbra Bulan yang kena pada Bumi bersaiz sangat kecil", "Matahari terlalu besar", "Bulan berputar pantas pada paksinya"], a: 1, hint: "Bandingkan saiz objek yang menghalang cahaya. Bulan sangat kecil, jadi kon gelapnya juga kecil." },
+                { q: "Apakah perbezaan struktur paling tepat antara 'Gugusan Bintang' dengan 'Galaksi'?", opts: ["Gugusan bintang lebih besar dari galaksi", "Galaksi tiada bintang, hanya planet", "Galaksi mengandungi sistem yang jauh lebih besar termasuk banyak gugusan bintang", "Keduanya adalah benda yang sama"], a: 2, hint: "Galaksi adalah ibarat 'negara', manakala gugusan bintang adalah 'taman perumahan' di dalamnya." }
+            ]
+        };
+
+        const pointSystem = [10, 20, 50]; // Markah utk Round 1, 2, 3
+
+        let gameState = {
+            playerName: "",
+            score: 0,
+            roundIndex: 0,
+            questionIndex: 0,
+            currentQuestionData: null,
+            timer: 20,
+            timerInterval: null,
+            lifeline5050: true, // true bermaksud belum digunakan
+            lifelineHint: true,
+            isAnsweringAllowed: false,
+            questionsQueue: []
+        };
+
+        // DOM Elements
+        const screens = {
+            login: document.getElementById('screen-login'),
+            intro: document.getElementById('screen-round-intro'),
+            game: document.getElementById('screen-game'),
+            result: document.getElementById('screen-result')
+        };
+
+        function startTimer() {
+            gameState.timer = 20;
+            updateTimerDisplay();
+            const timerBar = document.getElementById('timerBar');
+            timerBar.style.width = '100%';
+            timerBar.className = 'timer-bar'; // reset class
+            
+            clearInterval(gameState.timerInterval);
+            gameState.timerInterval = setInterval(() => {
+                gameState.timer--;
+                updateTimerDisplay();
+                
+                // Visual bar
+                let percentage = (gameState.timer / 20) * 100;
+                timerBar.style.width = percentage + '%';
+                
+                if (gameState.timer <= 10 && gameState.timer > 5) {
+                    timerBar.className = 'timer-bar timer-warning';
+                } else if (gameState.timer <= 5) {
+                    timerBar.className = 'timer-bar timer-danger';
+                }
+
+                if (gameState.timer <= 0) {
+                    clearInterval(gameState.timerInterval);
+                    handleTimeOut();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('timerText').innerText = gameState.timer + 's';
+        }
+
+        function stopTimer() {
+            clearInterval(gameState.timerInterval);
+        }
+
+        function switchScreen(screenName) {
+            Object.values(screens).forEach(s => s.classList.remove('active'));
+            screens[screenName].classList.add('active');
+        }
+
+        function startGame() {
+            const nameInput = document.getElementById('playerNameInput').value.trim();
+            if (nameInput === "") {
+                alert("Sila masukkan nama penuh anda untuk meneruskan permainan.");
+                return;
+            }
+            gameState.playerName = nameInput.toUpperCase();
+            document.getElementById('hudPlayerName').innerText = gameState.playerName;
+            
+            // Inisialisasi Game
+            gameState.score = 0;
+            gameState.roundIndex = 0;
+            gameState.questionIndex = 0;
+            updateScoreDisplay();
+            
+            startRoundSequence();
+        }
+
+        function startRoundSequence() {
+            // Check jika permainan tamat
+            if (gameState.roundIndex > 2) {
+                endGame();
+                return;
+            }
+
+            // Papar pengenalan pusingan
+            switchScreen('intro');
+            let roundNames = ["PUSINGAN 1", "PUSINGAN 2", "PUSINGAN 3"];
+            let roundDesc = ["Soalan Cepat Tepat (10 Mata)", "Risiko Mata Berganda (20 Mata)", "Cabaran Jutawan (50 Mata)"];
+            
+            document.getElementById('roundTitleDisplay').innerText = roundNames[gameState.roundIndex];
+            document.getElementById('roundDescDisplay').innerText = roundDesc[gameState.roundIndex];
+            document.getElementById('hudRoundTitle').innerText = roundNames[gameState.roundIndex];
+
+            // Setup soalan untuk pusingan ini
+            if (gameState.roundIndex === 0) gameState.questionsQueue = [...allQuestions.round1];
+            if (gameState.roundIndex === 1) gameState.questionsQueue = [...allQuestions.round2];
+            if (gameState.roundIndex === 2) gameState.questionsQueue = [...allQuestions.round3];
+            
+            gameState.questionIndex = 0;
+
+            // Masuk ke gameplay selepas 3 saat
+            setTimeout(() => {
+                switchScreen('game');
+                loadQuestion();
+            }, 3000);
+        }
+
+        function loadQuestion() {
+            if (gameState.questionIndex >= 10) {
+                // Habis pusingan, pergi next round
+                gameState.roundIndex++;
+                startRoundSequence();
+                return;
+            }
+
+            gameState.currentQuestionData = gameState.questionsQueue[gameState.questionIndex];
+            document.getElementById('hudQuestionNum').innerText = gameState.questionIndex + 1;
+            document.getElementById('questionText').innerText = gameState.currentQuestionData.q;
+
+            // Reset butang pilihan
+            for (let i = 0; i < 4; i++) {
+                let btn = document.getElementById(`optionsContainer`).children[i];
+                btn.className = "btn-tv text-lg py-4 px-6 rounded-xl font-bold text-left flex items-center"; // reset style
+                btn.disabled = false;
+                btn.style.opacity = "1";
+                btn.style.visibility = "visible";
+                document.getElementById(`opt${i}Text`).innerText = gameState.currentQuestionData.opts[i];
+            }
+
+            gameState.isAnsweringAllowed = true;
+            startTimer();
+        }
+
+        function checkAnswer(selectedIndex) {
+            if (!gameState.isAnsweringAllowed) return;
+            gameState.isAnsweringAllowed = false;
+            stopTimer();
+
+            let correctIndex = gameState.currentQuestionData.a;
+            let btns = document.getElementById(`optionsContainer`).children;
+
+            if (selectedIndex === correctIndex) {
+                // Betul
+                btns[selectedIndex].classList.add('btn-correct', 'animate-pop');
+                let pointsGained = pointSystem[gameState.roundIndex];
+                gameState.score += pointsGained;
+                updateScoreDisplay();
+                showFeedback(true, pointsGained);
+                createConfetti(); // pancutan konfeti
+            } else {
+                // Salah
+                btns[selectedIndex].classList.add('btn-wrong', 'animate-shake');
+                btns[correctIndex].classList.add('btn-correct'); // tunjuk jawapan betul
+                showFeedback(false, 0);
+            }
+        }
+
+        function handleTimeOut() {
+            gameState.isAnsweringAllowed = false;
+            let correctIndex = gameState.currentQuestionData.a;
+            let btns = document.getElementById(`optionsContainer`).children;
+            btns[correctIndex].classList.add('btn-correct', 'animate-pop'); // tunjuk jawapan betul
+            showFeedback(false, 0, "MASA TAMAT!");
+        }
+
+        function updateScoreDisplay() {
+            const scoreEl = document.getElementById('hudScore');
+            scoreEl.innerText = gameState.score;
+            scoreEl.classList.add('animate-pop');
+            setTimeout(() => scoreEl.classList.remove('animate-pop'), 500);
+        }
+
+        function showFeedback(isCorrect, points, customMsg = null) {
+            const modal = document.getElementById('feedbackModal');
+            const box = document.getElementById('feedbackBox');
+            const title = document.getElementById('feedbackTitle');
+            const text = document.getElementById('feedbackText');
+            const icon = document.getElementById('feedbackIcon');
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-90');
+            }, 50);
+
+            if (isCorrect) {
+                icon.innerText = "🌟";
+                title.innerText = "TEPAT!";
+                title.className = "text-4xl font-black mb-2 text-green-400";
+                text.innerText = `+${points} Mata Ditambah!`;
+                box.className = "bg-gray-900 border-4 border-green-500 rounded-3xl p-10 max-w-md w-full text-center transform transition-transform duration-300 shadow-[0_0_40px_rgba(74,222,128,0.5)]";
+            } else {
+                icon.innerText = "❌";
+                title.innerText = customMsg || "SALAH!";
+                title.className = "text-4xl font-black mb-2 text-red-500";
+                text.innerText = "Tiada mata diberikan. Cuba lagi!";
+                box.className = "bg-gray-900 border-4 border-red-500 rounded-3xl p-10 max-w-md w-full text-center transform transition-transform duration-300 shadow-[0_0_40px_rgba(239,68,68,0.5)]";
+            }
+        }
+
+        function nextAction() {
+            // Tutup modal
+            const modal = document.getElementById('feedbackModal');
+            const box = document.getElementById('feedbackBox');
+            modal.classList.add('opacity-0');
+            box.classList.add('scale-90');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                // Pergi ke soalan seterusnya
+                gameState.questionIndex++;
+                loadQuestion();
+            }, 300);
+        }
+
+        function use5050() {
+            if (!gameState.lifeline5050 || !gameState.isAnsweringAllowed) return;
+            
+            gameState.lifeline5050 = false;
+            let btn5050 = document.getElementById('btn-5050');
+            btn5050.classList.add('used');
+            
+            let correctIndex = gameState.currentQuestionData.a;
+            let wrongIndices = [0, 1, 2, 3].filter(i => i !== correctIndex);
+            
+            // Pilih 2 secara rawak untuk dibuang
+            wrongIndices.sort(() => Math.random() - 0.5);
+            let toHide = wrongIndices.slice(0, 2);
+            
+            let btns = document.getElementById(`optionsContainer`).children;
+            toHide.forEach(index => {
+                btns[index].style.visibility = "hidden"; // Sembunyikan tapi simpan susun atur
+                btns[index].disabled = true;
+            });
+        }
+
+        function useHint() {
+            if (!gameState.lifelineHint || !gameState.isAnsweringAllowed) return;
+            
+            gameState.lifelineHint = false;
+            let btnHint = document.getElementById('btn-hint');
+            btnHint.classList.add('used');
+
+            document.getElementById('hintTextDisplay').innerText = gameState.currentQuestionData.hint;
+            document.getElementById('hintModal').classList.remove('hidden');
+        }
+
+        function closeHint() {
+            document.getElementById('hintModal').classList.add('hidden');
+        }
+
+        function endGame() {
+            switchScreen('result');
+            document.getElementById('resultName').innerText = gameState.playerName;
+            
+            // Animasi kiraan markah
+            let currentDisplayScore = 0;
+            let targetScore = gameState.score;
+            let step = Math.max(1, Math.floor(targetScore / 50));
+            let scoreInterval = setInterval(() => {
+                currentDisplayScore += step;
+                if (currentDisplayScore >= targetScore) {
+                    currentDisplayScore = targetScore;
+                    clearInterval(scoreInterval);
+                }
+                document.getElementById('resultScore').innerText = currentDisplayScore;
+            }, 20);
+
+            createConfetti(100);
+            generateCertificate();
+        }
+
+        function generateCertificate() {
+            const canvas = document.getElementById('certCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Reset dan Lukis Background
+            ctx.fillStyle = '#0f172a'; // warna latar biru gelap
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Lukis Border Corak
+            ctx.strokeStyle = '#fbbf24'; // warna kuning/emas
+            ctx.lineWidth = 10;
+            ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+            ctx.strokeStyle = '#3b82f6'; // warna biru
+            ctx.lineWidth = 2;
+            ctx.strokeRect(35, 35, canvas.width - 70, canvas.height - 70);
+
+            // Teks Tengah
+            ctx.textAlign = 'center';
+            
+            // Tajuk Sijil
+            ctx.fillStyle = '#fbbf24';
+            ctx.font = 'bold 45px Montserrat, sans-serif';
+            ctx.fillText('SIJIL PENCAPAIAN', canvas.width / 2, 100);
+            
+            // Subtajuk
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '20px Montserrat, sans-serif';
+            ctx.fillText('Dengan bangganya dianugerahkan kepada:', canvas.width / 2, 150);
+            
+            // Nama Pemain
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 50px Montserrat, sans-serif';
+            // Garis bawah nama
+            ctx.fillText(gameState.playerName, canvas.width / 2, 220);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2 - 200, 235);
+            ctx.lineTo(canvas.width / 2 + 200, 235);
+            ctx.strokeStyle = '#475569';
+            ctx.stroke();
+            
+            // Info Kelas & Markah
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = 'bold 24px Montserrat, sans-serif';
+            ctx.fillText('Kelas: 6 STANFORD', canvas.width / 2, 290);
+            
+            ctx.fillStyle = '#cbd5e1';
+            ctx.font = '22px Montserrat, sans-serif';
+            ctx.fillText('kerana berjaya menamatkan Permainan Kuiz Interaktif', canvas.width / 2, 340);
+            ctx.font = 'bold 28px Montserrat, sans-serif';
+            ctx.fillStyle = '#c084fc'; // ungu
+            ctx.fillText('Topik Sains: GERHANA DAN GALAKSI', canvas.width / 2, 380);
+            
+            // Markah
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '20px Montserrat, sans-serif';
+            ctx.fillText('Jumlah Markah Kemenangan:', canvas.width / 2, 440);
+            
+            ctx.fillStyle = '#4ade80'; // hijau
+            ctx.font = 'bold 50px Montserrat, sans-serif';
+            ctx.fillText(gameState.score + ' Mata', canvas.width / 2, 495);
+            
+            // Disediakan oleh
+            ctx.fillStyle = '#64748b';
+            ctx.font = 'italic 16px Montserrat, sans-serif';
+            ctx.fillText('Disediakan oleh: Cikgu Norkhairil bin Mohamad', canvas.width / 2, 535);
+        }
+
+        function downloadCertificate() {
+            const canvas = document.getElementById('certCanvas');
+            const dataURL = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `Sijil_Sains_${gameState.playerName.replace(/\s+/g, '_')}.png`;
+            link.href = dataURL;
+            link.click();
+        }
+
+        const cvsConfetti = document.getElementById('confetti');
+        const ctxConfetti = cvsConfetti.getContext('2d');
+        let particles = [];
+        let confettiActive = false;
+
+        function resizeCanvas() {
+            cvsConfetti.width = window.innerWidth;
+            cvsConfetti.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function createConfetti(count = 40) {
+            confettiActive = true;
+            const colors = ['#3b82f6', '#fbbf24', '#ef4444', '#10b981', '#8b5cf6'];
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: Math.random() * cvsConfetti.width,
+                    y: Math.random() * cvsConfetti.height - cvsConfetti.height,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    speedY: Math.random() * 3 + 2,
+                    speedX: (Math.random() - 0.5) * 4,
+                    rotation: Math.random() * 360,
+                    rotationSpeed: (Math.random() - 0.5) * 10
+                });
+            }
+            if (!document.confettiLoop) {
+                document.confettiLoop = requestAnimationFrame(updateConfetti);
+            }
+        }
+
+        function updateConfetti() {
+            if (!confettiActive) {
+                ctxConfetti.clearRect(0, 0, cvsConfetti.width, cvsConfetti.height);
+                document.confettiLoop = null;
+                return;
+            }
+            ctxConfetti.clearRect(0, 0, cvsConfetti.width, cvsConfetti.height);
+            for (let i = 0; i < particles.length; i++) {
+                let p = particles[i];
+                p.y += p.speedY;
+                p.x += p.speedX;
+                p.rotation += p.rotationSpeed;
+                
+                ctxConfetti.save();
+                ctxConfetti.translate(p.x, p.y);
+                ctxConfetti.rotate(p.rotation * Math.PI / 180);
+                ctxConfetti.fillStyle = p.color;
+                ctxConfetti.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                ctxConfetti.restore();
+
+                // Padam yang jatuh
+                if (p.y > cvsConfetti.height) {
+                    particles.splice(i, 1);
+                    i--;
+                }
+            }
+            if (particles.length > 0) {
+                document.confettiLoop = requestAnimationFrame(updateConfetti);
+            } else {
+                confettiActive = false;
+                document.confettiLoop = null;
+            }
+        }
+
+    </script>
+</body>
+</html>
